@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import time
 import threading
 import subprocess
 import tkinter as tk
@@ -348,8 +349,14 @@ def convert_to_m4b(file_paths):
         root.after(0, lambda: messagebox.showinfo("No Supported Files", "No supported audio files were found."))
         return
 
+    start_time = time.time()
+
+    def clean(p):
+        """Strip \\?\ long-path prefix so ffmpeg can handle the path."""
+        return p.replace("\\\\?\\", "")
+
     total = len(audio_files)
-    output_dir = os.path.dirname(audio_files[0])
+    output_dir = clean(os.path.dirname(audio_files[0]))
     out_name = output_name_var.get().strip() or "audiobook"
     bitrate = bitrate_var.get()
 
@@ -358,7 +365,7 @@ def convert_to_m4b(file_paths):
 
     out_path = os.path.join(output_dir, out_name)
     counter = 1
-    base_out = out_path[:-4]  # strip .m4b
+    base_out = out_path[:-4]
     while os.path.exists(out_path):
         out_path = f"{base_out}-{counter}.m4b"
         counter += 1
@@ -388,7 +395,7 @@ def convert_to_m4b(file_paths):
         temp_files.append(temp_out)
 
         encode_cmd = [
-            "ffmpeg", "-y", "-i", path,
+            "ffmpeg", "-y", "-i", clean(path),
             "-c:a", "aac", "-b:a", bitrate, "-vn",
             temp_out
         ]
@@ -471,10 +478,15 @@ def convert_to_m4b(file_paths):
         return
 
     update_progress(100)
+    elapsed = time.time() - start_time
+    mins, secs = divmod(int(elapsed), 60)
+    time_str = f"{mins}m {secs}s" if mins else f"{secs}s"
     out_size = os.path.getsize(out_path)
     size_str = f"{round(out_size / (1024*1024), 1)} MB"
     root.after(0, lambda: write_output(
-        f"\n✅ Done! → {os.path.basename(out_path)} ({size_str})\n📂 Saved to: {output_dir}"
+        f"\n✅ Done! → {os.path.basename(out_path)} ({size_str})\n"
+        f"📂 Saved to: {output_dir}\n"
+        f"⏱️ Completed in {time_str}"
     ))
     root.after(1500, lambda: update_progress(0))
 
