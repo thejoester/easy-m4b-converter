@@ -451,7 +451,7 @@ def drop_event_handler(event):
             write_output(f"📁 {len(pending_files)} file(s) queued — review order below:\n")
             for i, f in enumerate(pending_files):
                 write_output(f"  {i+1:>3}. {os.path.basename(f)}")
-            write_output(f"\n🎵 Detected bitrate: {detected_br}  |  Name: \"{suggested}\"")
+            write_output(f"\n🎵 Detected bitrate: {detected_br} \nName: \"{suggested}\"")
             write_output("\n✅ Order look correct? Hit Start — or ❌ to cancel and re-drop.")
             start_button.pack(padx=10, pady=(0, 4), fill="x")
             start_button.lift()
