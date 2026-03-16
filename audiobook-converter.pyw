@@ -631,48 +631,6 @@ def drop_event_handler(event):
 
     threading.Thread(target=probe_and_stage, daemon=True).start()
 
-    hide_output(clear=True)
-
-    if not pending_files:
-        write_output(f"⚠️ No supported audio files found in dropped items.")
-        write_output(f"   Raw drop data: {event.data[:200]}")
-        show_output()
-        drag_label.config(
-            text="🎧 Drag and drop audio files here\n(.mp3 / .m4a / .aac / .flac / .wav)\n\nFiles will be sorted by filename and merged in order."
-        )
-        return
-
-    drag_label.config(text="🔍 Detecting metadata...")
-    write_output(f"📁 {len(pending_files)} file(s) found — reading metadata...\n")
-    show_output()
-
-    # Do ffprobe work in background then update UI
-    def probe_and_stage():
-        suggested = deduce_output_name(pending_files)
-        detected_br = detect_bitrate(pending_files[0])
-
-        def update_ui():
-            output_name_var.set(suggested)
-            bitrate_var.set(detected_br)
-            drag_label.config(
-                text="🎧 Drag and drop audio files here\n(.mp3 / .m4a / .aac / .flac / .wav)\n\nFiles will be sorted by filename and merged in order."
-            )
-            # Rewrite log with file list
-            output_text.configure(state="normal")
-            output_text.delete("1.0", tk.END)
-            output_text.configure(state="disabled")
-            write_output(f"📁 {len(pending_files)} file(s) queued — review order below:\n")
-            for i, f in enumerate(pending_files):
-                write_output(f"  {i+1:>3}. {os.path.basename(f)}")
-            write_output(f"\n🎵 Detected bitrate: {detected_br} \nName: \"{suggested}\"")
-            write_output("\n✅ Order look correct? Hit Start — or ❌ to cancel and re-drop.")
-            start_button.pack(padx=10, pady=(0, 4), fill="x")
-            start_button.lift()
-
-        root.after(0, update_ui)
-
-    threading.Thread(target=probe_and_stage, daemon=True).start()
-
 # --- Bind drag-and-drop if available ---
 if dnd_available:
     drag_label.drop_target_register(tkdnd.DND_FILES)
