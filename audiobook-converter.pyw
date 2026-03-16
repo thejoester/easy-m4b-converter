@@ -20,6 +20,7 @@ except ImportError:
 
 # --- GUI Setup ---
 root.title("Easy M4B Converter")
+root.iconbitmap("audiobook-converter.ico") 
 root.geometry("800x600")
 root.minsize(380, 500)
 root.resizable(True, True)
