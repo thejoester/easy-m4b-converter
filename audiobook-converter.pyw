@@ -459,6 +459,7 @@ def convert_to_m4b(file_paths):
         "-i", temp_concat,
         "-i", meta_txt,
         "-map_metadata", "1",
+        "-metadata", f"album={out_name[:-4]}",
         "-codec", "copy",
         out_path
     ]
