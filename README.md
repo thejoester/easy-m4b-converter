@@ -1,4 +1,4 @@
-# Audiobook Converter
+# Easy M4B Converter
 
 A lightweight Windows app for merging multiple audio files into a single `.m4b` audiobook with chapter markers.
 
