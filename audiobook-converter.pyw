@@ -202,20 +202,24 @@ def _build_filename(*_):
     series = series_var.get().strip()
     part   = series_part_var.get().strip()
 
-    parts = []
-    if artist:
-        parts.append(artist)
-    if album:
-        parts.append(f"- {album}" if parts else album)
+    # Build series bracket: [Series Part] or [Series] if no part
     series_str = ""
     if series and part:
         series_str = f"[{series} {part}]"
     elif series:
         series_str = f"[{series}]"
+
+    # Template: Artist - [Series Part] - Album
+    # Each section only included if non-empty
+    parts = []
+    if artist:
+        parts.append(artist)
     if series_str:
         parts.append(series_str)
+    if album:
+        parts.append(album)
 
-    output_name_var.set(" ".join(parts) if parts else "audiobook")
+    output_name_var.set(" - ".join(parts) if parts else "audiobook")
 
 def _on_filename_edit(*_):
     global _filename_user_edited
