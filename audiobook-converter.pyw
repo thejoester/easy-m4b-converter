@@ -611,29 +611,41 @@ def normalize_path(p):
     return p
 
 def parse_dropped_paths(data):
-    paths = []
-    data = data.strip()
-    i = 0
-    while i < len(data):
-        if data[i] == '{':
-            end = data.find('}', i)
-            if end != -1:
-                paths.append(data[i+1:end].strip())
-                i = end + 1
-            else:
-                paths.append(data[i+1:].strip())
-                break
-        elif data[i] == ' ':
-            i += 1
-        else:
-            end = data.find(' ', i)
-            if end == -1:
-                paths.append(data[i:].strip())
-                break
-            else:
-                paths.append(data[i:end].strip())
-                i = end + 1
-    return [p for p in paths if p]
+    """Parse tkinterdnd2 drop data using Tcl's native list parser,
+    which correctly handles paths containing { } characters in names.
+    Falls back to manual parsing if Tcl is unavailable.
+    """
+    # Try Tcl's native splitlist first — it handles nested braces correctly
+    try:
+        result = root.tk.splitlist(data)
+        if result:
+            return list(result)
+    except Exception:
+        pass
+
+    # Manual fallback
+    s = data.strip()
+
+    def looks_like_path(p):
+        p = p.strip()
+        if len(p) >= 2 and p[1] == ':':
+            return True
+        if p.startswith('/') or p.startswith('\\'):
+            return True
+        return False
+
+    # If no braces at all, split on spaces won't work for spaced paths
+    # so just return the whole string
+    if '{' not in s:
+        return [s] if s else []
+
+    # Strip single outer brace wrapper if the whole string is wrapped
+    if s.startswith('{') and s.endswith('}'):
+        inner = s[1:-1].strip()
+        if looks_like_path(inner):
+            return [inner]
+
+    return [s] if s else []
 
 # ---------------------------------------------------------------------------
 # Drop handler
