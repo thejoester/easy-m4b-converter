@@ -175,6 +175,28 @@ def get_m4b_info(file_path):
     }
 
 
+def get_source_tags(file_path):
+    result = run_silent([
+        "ffprobe", "-v", "error",
+        "-print_format", "json",
+        "-show_entries", "format_tags",
+        file_path,
+    ])
+    if result.returncode != 0:
+        return {}
+    try:
+        data = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        return {}
+    tags = data.get("format", {}).get("tags", {})
+    return tags if isinstance(tags, dict) else {}
+
+
+def escape_ffmetadata_value(value):
+    # Escape backslashes/newlines for ffmetadata parser safety.
+    return str(value).replace("\\", "\\\\").replace("\n", "\\n")
+
+
 def sanitize(text):
     return "".join(char for char in text if char not in r'\\/:*?"<>|').strip()
 
@@ -207,9 +229,18 @@ def build_chapters(duration_ms, interval_minutes):
     return chapters
 
 
-def write_ffmetadata(meta_path, chapters):
+def write_ffmetadata(meta_path, chapters, tags=None):
     with open(meta_path, "w", encoding="utf-8") as handle:
         handle.write(";FFMETADATA1\n")
+        if tags:
+            for key, value in tags.items():
+                if key is None or value is None:
+                    continue
+                key_text = str(key).strip()
+                if not key_text:
+                    continue
+                handle.write(f"{key_text}={escape_ffmetadata_value(value)}\n")
+            handle.write("\n")
         for start_ms, end_ms, title in chapters:
             handle.write(
                 f"[CHAPTER]\nTIMEBASE=1/1000\nSTART={start_ms}\nEND={end_ms}\ntitle={title}\n\n"
@@ -229,18 +260,19 @@ def set_chapters(file_path, duration_ms, interval_minutes):
     output_path = build_output_path(file_path, interval_minutes)
     meta_path = os.path.join(os.path.dirname(clean_path(file_path)), "_chapter_editor_meta.txt")
     chapters = build_chapters(duration_ms, interval_minutes)
-    write_ffmetadata(meta_path, chapters)
+    source_tags = get_source_tags(clean_path(file_path))
+    write_ffmetadata(meta_path, chapters, tags=source_tags)
 
     command = [
         "ffmpeg", "-y",
         "-i", clean_path(file_path),
-        "-f", "ffmetadata", "-i", meta_path,
+        "-i", meta_path,
         # Keep audiobook audio and optional cover art, but drop subtitle/data streams
         # that can break ipod/m4b muxing when stream-copied.
         "-map", "0:a",
         "-map", "0:v?",
-        "-map_metadata", "0",
-        "-map_chapters", "1",
+        # Import chapter and tag metadata from ffmetadata input.
+        "-map_metadata", "1",
         "-codec", "copy",
         output_path,
     ]
