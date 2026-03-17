@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import json
 import time
 import threading
 import subprocess
@@ -383,6 +384,24 @@ def get_duration_ms(file_path):
     ])
     return int(float(r.stdout.strip()) * 1000)
 
+def get_chapter_count(file_path):
+    r = run_silent([
+        "ffprobe", "-v", "error",
+        "-print_format", "json",
+        "-show_chapters",
+        file_path
+    ])
+    if r.returncode != 0:
+        return None
+    try:
+        data = json.loads(r.stdout or "{}")
+    except json.JSONDecodeError:
+        return None
+    chapters = data.get("chapters", [])
+    if not isinstance(chapters, list):
+        return None
+    return len(chapters)
+
 # ---------------------------------------------------------------------------
 # Filename sanitisation
 # ---------------------------------------------------------------------------
@@ -529,11 +548,24 @@ def convert_to_m4b(file_paths):
     mins, secs = divmod(int(elapsed), 60)
     time_str = f"{mins}m {secs}s" if mins else f"{secs}s"
     size_str = f"{round(os.path.getsize(out_path) / (1024*1024), 1)} MB"
+    chapter_count = get_chapter_count(out_path)
+
+    chapter_line = ""
+    warning_line = ""
+    if chapter_count is not None:
+        chapter_label = "chapter" if chapter_count == 1 else "chapters"
+        chapter_line = f"\n📖 Detected {chapter_count} {chapter_label}"
+        if chapter_count == 0:
+            warning_line = "\n⚠️ Warning: no chapters detected in the output file."
+        elif chapter_count == 1:
+            warning_line = "\n⚠️ Warning: only 1 chapter detected in the output file."
 
     root.after(0, lambda: write_output(
         f"\n✅ Done! → {os.path.basename(out_path)} ({size_str})\n"
         f"📂 Saved to: {clean_dir}\n"
         f"⏱️ Completed in {time_str}"
+        f"{chapter_line}"
+        f"{warning_line}"
     ))
     root.after(1500, lambda: update_progress(0))
     _cleanup(*temp_files, meta_txt, files_txt, temp_concat)
@@ -604,7 +636,7 @@ def parse_dropped_paths(data):
     return [p for p in paths if p]
 
 # ---------------------------------------------------------------------------
-# Drop handler — single clean version, no duplicates
+# Drop handler
 # ---------------------------------------------------------------------------
 def drop_event_handler(event):
     global pending_files
