@@ -34,7 +34,7 @@ jobs:
           pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter2.ico m4b-chapter-editor.pyw
 
       - name: Rename outputs
-        run: move dist\\audiobook-converter.exe dist\\AudiobookConverter-${{ env.VERSION }}.exe
+        run: move dist\\audiobook-converter.exe dist\\M4B-Converter-${{ env.VERSION }}.exe
       - name: Rename chapter editor output
         run: move dist\\m4b-chapter-editor.exe dist\\M4BChapterEditor-${{ env.VERSION }}.exe
 
@@ -43,14 +43,14 @@ jobs:
         with:
           name: AudiobookTools-${{ env.VERSION }}
           path: |
-            dist/AudiobookConverter-${{ env.VERSION }}.exe
+            dist/M4B-Converter-${{ env.VERSION }}.exe
             dist/M4BChapterEditor-${{ env.VERSION }}.exe
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/AudiobookConverter-${{ env.VERSION }}.exe
+            dist/M4B-Converter-${{ env.VERSION }}.exe
             dist/M4BChapterEditor-${{ env.VERSION }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
