@@ -49,7 +49,7 @@ winget install ffmpeg
 
 ---
 
-## M4B Chapter Editor
+## M4B Chapter Editor (beta)
 
 *M4B chapter editor* is a companion tool for editing chapter structure in a single `.m4b` file.
 

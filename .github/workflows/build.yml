@@ -28,22 +28,29 @@ jobs:
         shell: bash
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-      - name: Build executable
+      - name: Build executables
         run: |
           pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter.ico audiobook-converter.pyw
+          pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter2.ico m4b-chapter-editor.pyw
 
-      - name: Rename output
+      - name: Rename outputs
         run: move dist\\audiobook-converter.exe dist\\AudiobookConverter-${{ env.VERSION }}.exe
+      - name: Rename chapter editor output
+        run: move dist\\m4b-chapter-editor.exe dist\\M4BChapterEditor-${{ env.VERSION }}.exe
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: AudiobookConverter-${{ env.VERSION }}
-          path: dist/AudiobookConverter-${{ env.VERSION }}.exe
+          name: AudiobookTools-${{ env.VERSION }}
+          path: |
+            dist/AudiobookConverter-${{ env.VERSION }}.exe
+            dist/M4BChapterEditor-${{ env.VERSION }}.exe
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/AudiobookConverter-${{ env.VERSION }}.exe
+          files: |
+            dist/AudiobookConverter-${{ env.VERSION }}.exe
+            dist/M4BChapterEditor-${{ env.VERSION }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
