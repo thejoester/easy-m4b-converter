@@ -31,7 +31,7 @@ jobs:
       - name: Build executables
         run: |
           pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter.ico audiobook-converter.pyw
-          pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter2.ico m4b-chapter-editor.pyw
+          pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter.ico m4b-chapter-editor.pyw
 
       - name: Rename outputs
         run: move dist\\audiobook-converter.exe dist\\M4B-Converter-${{ env.VERSION }}.exe
