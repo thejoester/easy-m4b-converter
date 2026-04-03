@@ -101,15 +101,6 @@ pip install pyinstaller tkinterdnd2 pillow
 pyinstaller --noconfirm --onefile --windowed --icon=audiobook-converter.ico --collect-all tkinterdnd2 audiobook-converter.pyw
 ```
 
-### Build and release via GitHub Actions
-
-Push a tag and the workflow handles the rest:
-
-```
-git tag v1.0.0
-git push origin v1.0.0
-```
-
 </details>
 
 ---
