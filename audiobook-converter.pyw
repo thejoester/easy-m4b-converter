@@ -472,6 +472,9 @@ def convert_to_m4b(file_paths):
         if proc.returncode != 0:
             errors.append(f"{fname}: {proc.stderr[-300:]}")
             continue
+        if not os.path.exists(temp_out) or os.path.getsize(temp_out) == 0:
+            errors.append(f"{fname}: ffmpeg exited successfully but produced no output file.")
+            continue
 
         try:
             dur_ms = get_duration_ms(temp_out)
